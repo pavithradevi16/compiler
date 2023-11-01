@@ -1,0 +1,104 @@
+Week -7 
+
+1) calculator
+
+[s2200487@centos8-linux Wed Nov 01 09:33 AM week7]$ cat decl.y
+%{
+#include <stdio.h>
+#include <stdlib.h>
+%}
+%start  line
+%token  CHAR, COMMA, FLOAT, ID, INT, SEMI
+%%
+line :  /* lambda */
+          | line decl
+     | line error {
+                          printf("Failure :-(\n");
+                          yyerrok;
+                          yyclearin;
+            }
+     ;
+decl :  type ID list { printf("Success!\n"); } ;
+
+list :  COMMA ID list
+          | SEMI
+           ;
+type :   INT | CHAR | FLOAT
+           ;
+
+%%
+extern FILE *yyin;
+main()
+{
+    do {
+        yyparse();
+    } while(!feof(yyin));
+}
+yyerror(char *s)
+{
+   /* Don't have to do anything! */
+}
+
+[s2200487@centos8-linux Wed Nov 01 09:34 AM week7]$ cat calc.y
+%{
+#include <stdio.h>
+        int flag = 0;
+%}
+
+%token NUMBER
+%left '+' '-'
+%left '*' '/' '%'
+%left '(' ')'
+
+%%
+ArithmeticExpr: E {
+                            printf("\nResult : %d\n", $$);
+                return 0;
+                }
+E: E'+'E {$$=$1+$3;}
+  | E'-'E {$$=$1-$3;}
+ | E'*'E {$$=$1*$3;}
+ | E'/'E {$$=$1/$3;}
+ | E'%'E {$$=$1%$3;}
+ | '('E')' {$$=$2;}
+ | NUMBER {$$=$1;}
+%%
+
+void main() {
+        printf("\nEnter the arithmetic expression : \n");
+        yyparse();
+        if (flag == 0) printf("Arithmetic Expression is Valid!\n");
+}
+
+void yyerror() {
+        printf("Arithmetic Expression is Invalid!\n");
+        flag = 1;
+}
+
+%{
+#include <stdio.h>
+#include "y.tab.h"
+extern int yylval;
+%}
+
+%%
+[0-9]+ { yylval = atoi(yytext);
+        return NUMBER;
+}
+[\t] ;
+[\n] return 0;
+. return yytext[0];
+%%
+
+int yywrap() {
+        return 1;
+}
+
+INPUT & OUTPUT
+Enter the arithmetic expression :
+2+3-6
+
+Result : -1
+Arithmetic Expression is Valid!
+
+------------------------------------------------------------------------------------------------------------------------------------------
