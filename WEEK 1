@@ -1,0 +1,55 @@
+week-1
+separate symbol and alphabets
+----------------------------------
+%option noyywrap
+
+%{
+        char spl_arr[100] = {0};
+        char alpha_arr[100] = {0};
+        int spl_index = 0;
+        int alpha_index = 0;
+%}
+
+%%
+\n return 0;
+[a-zA-Z0-9] alpha_arr[alpha_index++] = yytext[0];
+[^a-zA-Z0-9] spl_arr[spl_index++] = yytext[0];
+%%
+
+int main() {
+        yylex();
+        printf("Special Characters : %s\n",spl_arr);
+        printf("Alphabets : %s\n",alpha_arr);
+        return 0;
+}
+
+output:
+IDHCS@#$%^&*(1
+Special Characters : @#$%^&*(
+Alphabets : IDHCS1
+
+------------------------------------------------------------------
+question - 2
+phone number validation
+
+%option noyywrap
+
+%{
+#include<stdio.h>
+%}
+
+%%
+\n return 0;
+^[+]{1}[0-9]{1,3}[ ][0-9]{10}\n printf("Valid!\n");
+^[^+] printf("Invalid!\n");
+%%
+
+int main(){
+        yylex();
+        return 0;
+}
+
+output:
+
++91 1234567890
+Valid!
