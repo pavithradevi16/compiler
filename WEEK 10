@@ -1,0 +1,203 @@
+WEEK - 10
+
+1) VALIDATE_FOR_WHILE
+
+ lexer.l
+%option noyywrap
+
+%{
+        #include <stdio.h>
+        #include <stdlib.h>
+        #include "y.tab.h"
+%}
+
+alpha [A-Za-z]
+digit [0-9]
+
+%%
+[ \t\n]
+for return FOR;
+while return WHILE;
+{digit}+ return NUM;
+{alpha}({alpha}|{digit})* return ID;
+"<=" return LE;
+">=" return GE;
+"==" return EQ;
+"!=" return NE;
+"||" return OR;
+"&&" return AND;
+. return yytext[0];
+%%
+
+ parser.y
+%{
+        #include <stdio.h>
+        #include <stdlib.h>
+        #include "y.tab.h"
+        extern FILE* yyin;
+        extern int yylex();
+        void yyerror(char*s);
+%}
+
+%token WHILE FOR NUM ID LE GE EQ NE OR AND
+%left '+' '-' '*' '/' '<' '>' '!' LE GE NE AND OR
+%right '='
+
+%%
+program: S program
+              |
+S: FINAL { printf("Input Accepted!\n"); }
+  ;
+FINAL: WHILE'(' E2 ')' '{' ST '}'
+        | FOR '(' E ';' E2 ';' E ')' '{' ST '}'
+ ;
+ST: ST ST
+    | E ';'
+;
+E: ID '=' E
+  | E '+' E
+ | E '-' E
+ | E '*' E
+ | E '/' E
+ | E '<' E
+ | E '>' E
+ | E LE E
+ | E GE E
+ | E EQ E
+ | E NE E
+ | E OR E
+ | E AND E
+ | ID
+ | NUM
+;
+E2: E '<' E
+    | E '>' E
+  | E LE E
+  | E GE E
+  | E EQ E
+  | E NE E
+  | E OR E
+  | E AND E
+  | ID
+  | NUM
+;
+%%
+
+void yyerror(char* s) {
+        printf("Error : %s\n",s);
+}
+
+int main(int argc, char* argv[]) {
+        yyin = fopen(argv[1],"r");
+        yyparse();
+}
+
+invalid_input.c
+
+for ( i = 0 ; i < 5 ; i = i ) {
+        a = 5;
+
+        while ( i {
+                        a = 10;
+                        }
+
+valid_input.c
+
+for ( i = 0 ; i < n ; i = i + 1 ) {
+                a = 1;
+}
+while ( i < 10 ) {
+                i = i + 1;
+}
+
+
+INPUT & OUTPUT:
+
+for(i=0;i<n;i+1){a=1;}
+Input Accepted!
+
+------------------------------------------------------------------------------------------------------------------------------------------
+
+2) VALIDATE_STRUCTURE
+
+ lexer.l
+%option noyywrap
+
+%{
+        #include <stdio.h>
+        #include <stdlib.h>
+        #include "y.tab.h"
+%}
+
+alpha [A-Za-z]
+digit [0-9]
+
+%%
+[ \t\n]
+"struct" return STRUCT;
+("int"|"char"|"float"|"double") return TYPE;
+{digit}+ return NUM;
+{alpha}({alpha}|{digit})* return ID;
+("["|"]"|"{"|"}"|";") return yytext[0];
+%%
+
+ parser.y
+%{
+        #include <stdio.h>
+        #include <stdlib.h>
+        #include "y.tab.h"
+        extern FILE* yyin;
+        extern int yylex();
+        void yyerror(char*s);
+%}
+
+%token NUM ID TYPE STRUCT
+
+%%
+prog: s prog
+        |
+s: final { printf("Syntax correct!\n"); };
+ final: STRUCT ID '{' st '}' ';'
+     ;
+st: e ';' st
+    |
+;
+e: TYPE ID
+  | TYPE ID'['NUM']'
+%%
+
+void yyerror(char* s) {
+        printf("Error : %s\n", s);
+}
+
+int main(int argc, char* argv[]) {
+        yyin = fopen(argv[1],"r");
+        yyparse();
+}
+
+invalid_input.c
+struct structName {
+        int a
+                char charArr[];
+};
+
+valid_input.c
+struct structName {
+        int number;
+        char character;
+        float f;
+        int arr[100];
+        char charArr[20];
+};
+
+INPUT & OUTPUT:
+struct structName {
+        int number;
+        char character;
+        float f;
+        int arr[100];
+        char charArr[20];
+};
+Syntax correct!
+
+------------------------------------------------------------------------------------------------------------------------------------------
