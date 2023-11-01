@@ -1,0 +1,175 @@
+WEEK2:
+-------------------------------------------------------------------
+%option noyywrap
+%{
+#include <stdio.h>
+#include <stdlib.h>
+%}
+%%
+end return 0;
+[a-zA-Z]+       { printf("Alphabets: %s, Length: %d\n", yytext,yyleng); }
+[0-9]+          { printf("Numbers: %s\n", yytext); }
+[+|-|*|/|^]+    { printf("Operators: %s\n",yytext); }
+" "                 ; // Skip whitespace
+\n                  ; // Skip newline
+.               { printf("INVALID CHARACTER: %s\n", yytext); }
+%%
+int main() {
+    yylex();
+    return 0;
+}
+output:
+asd0302@
+Alphabets: asd, Length: 3
+Numbers: 0302
+INVALID CHARACTER: @
+
+------------------------------------------------------------
+
+%option noyywrap
+
+%{
+#include<stdio.h>
+%}
+
+%%
+
+"/*"    {int c;
+        while(1){
+                while((c=input())!='*' && c!=EOF);
+                if(c=='*'){
+                        while((c=input())=='*');
+                if(c=='/')break;
+                if(c==EOF){perror("EOF");}
+                }
+        }
+        }
+
+%%
+
+int main()
+{
+yylex();
+return 0;
+}
+output:
+thuis is  jbsib/gvuigusv/ jbvu
+thuis is  jbsib jbvu
+
+----------------------------------------------------------------
+unput:
+%option noyywrap
+%{
+#include<stdio.h>
+#include<string.h>
+#undef YY_BUF_SIZE
+#define YY_BUF_SIZE 1024-1024
+%}
+%%
+"("[0-9]+")" {printf("%s",yytext);}
+[0-9]+ { char -yycopy = strdup(yytext);
+unput(')');
+for(int i=yyleng-1;i>=0;i--)
+unput(yycopy[i]);
+unput('(');
+free(yycopy);
+}
+\n {return 0;}
+%%
+
+int main()
+{
+        yylex();
+        return 0;
+}
+
+output:
+(1234)(1567)
+(1234)(1567)
+----------------------------------------------------
+HTML:
+%option noyywrap
+
+%{
+#include <stdio.h>
+#include<stdlib.h>
+#include <string.h>
+int html = 0,head = 0,body = 0,table = 0,tr = 0,td = 0;
+%}
+
+html "html"
+head "head"
+body "body"
+table "table"
+tr "tr"
+td "td"
+
+%%
+"<"{html}">" {
+                html++;
+                printf("Html tag : %s",yytext);
+        }
+"<"{head}">" {
+                head++;
+                printf("Head tag : %s",yytext);
+        }
+"<"{body}">" {
+                body++;
+                printf("Body tag : %s",yytext);
+        }
+"<"{table}">" {
+                table++;
+                printf("Table tag : %s",yytext);
+        }
+"<"{tr}">" {
+                tr++;
+                printf("Table Row tag : %s",yytext);
+        }
+"<"{td}">" {
+                td++;
+                printf("Table td tag : %s",yytext);
+        }
+"</"{html}">" html--;
+"</"{head}">" head--;
+"</"{body}">" body--;
+"</"{table}">" table--;
+"</"{tr}">" tr--;
+"</"{td}">" td--;
+. ;
+%%
+
+int main() {
+        yyin = fopen("code.html","r");
+        yylex();
+        if ( !html && !head && !body && !table && !tr && !td ) {
+                printf("HTML code is in Correct Format!\n");
+        }
+        else {
+                printf("HTML code is not in Correct Format!\n");
+        }
+        return 0;
+}
+
+.html:
+<html>
+        <head>
+        </head>
+        <body>
+                <table>
+                        <td>
+                                <tr></tr>
+                        </td>
+                </table>
+        </body>
+</html>
+
+output:
+
+Html tag : <html>
+Head tag : <head>
+
+Body tag : <body>
+Table tag : <table>
+Table td tag : <td>
+Table Row tag : <tr>
+----------------------------------------------------
