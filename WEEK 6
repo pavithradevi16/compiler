@@ -1,0 +1,284 @@
+week6
+------------------------------------------------------------------
+%option noyywrap
+%{
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+int line = 1; // Initialize line number
+
+typedef struct node {
+    char id[20];
+    char type[20];
+    int lineno;
+    struct node* next;
+} node;
+
+node head;
+
+void addnode(node*);
+void display();
+%}
+
+alpha [a-zA-z]
+numeric [0-9]
+
+%x intvar
+%x floatvar
+%x charvar
+
+%%
+
+"int"   {BEGIN intvar;}
+"char"  {BEGIN charvar;}
+"float" {BEGIN floatvar;}
+
+<intvar>{alpha}({alpha}|{numeric}|"_")* {
+    node* new_node = (node*)malloc(sizeof(node));
+    strcpy(new_node->id, yytext);
+    strcpy(new_node->type, "int");
+    new_node->lineno = line;
+    new_node->next = NULL;
+    addnode(new_node);
+}
+
+<intvar>";"|")" {BEGIN INITIAL;}
+
+<charvar>{alpha}({alpha}|{numeric}|"_")* {
+    node* new_node = (node*)malloc(sizeof(node));
+    strcpy(new_node->id, yytext);
+    strcpy(new_node->type, "char");
+    new_node->lineno = line;
+    new_node->next = NULL;
+    addnode(new_node);
+}
+
+<charvar>";"|")" {BEGIN INITIAL;}
+
+<floatvar>{alpha}({alpha}|{numeric}|"_")* {
+    node* new_node = (node*)malloc(sizeof(node));
+    strcpy(new_node->id, yytext);
+    strcpy(new_node->type, "float");
+    new_node->lineno = line;
+    new_node->next = NULL;
+    addnode(new_node);
+}
+
+<floatvar>";"|")" {BEGIN INITIAL;}
+
+<intvar>{alpha}({alpha}|{numeric}|"_")*[" "]?"(" {
+    node* new_node = (node*)malloc(sizeof(node));
+    strcpy(new_node->id, yytext);
+    strcpy(new_node->type, "function return int");
+    new_node->lineno = line;
+    new_node->next = NULL;
+    addnode(new_node);
+}
+
+<charvar>{alpha}({alpha}|{numeric}|"_")*[" "]?"(" {
+    node* new_node = (node*)malloc(sizeof(node));
+    strcpy(new_node->id, yytext);
+    strcpy(new_node->type, "function return char");
+    new_node->lineno = line;
+    new_node->next = NULL;
+    addnode(new_node);
+}
+
+<floatvar>{alpha}({alpha}|{numeric}|"_")*[" "]?"(" {
+    node* new_node = (node*)malloc(sizeof(node));
+    strcpy(new_node->id, yytext);
+    strcpy(new_node->type, "function return float");
+    new_node->lineno = line;
+    new_node->next = NULL;
+    addnode(new_node);
+}
+
+"void "(" "){alpha}({alpha}|{numeric}|"_") {
+    node* new_node = (node*)malloc(sizeof(node));
+    strcpy(new_node->id, yytext);
+    strcpy(new_node->type, "function return void");
+    new_node->lineno = line;
+    new_node->next = NULL;
+    addnode(new_node);
+}
+
+[\n] { line++; }
+. { ; }
+
+<intvar>. { ; }
+<charvar>. { ; }
+<floatvar>. { ; }
+
+%%
+
+void addnode(node* new_node) {
+    node* p = &head;
+    while (p->next != NULL) p = p->next;
+    p->next = new_node;
+}
+
+void display() {
+    node* p = head.next;
+    printf("ID\tType\tLineno\n");
+    while (p != NULL) {
+        printf("%s\t%s\t%d\n", p->id, p->type, p->lineno);
+        p = p->next;
+    }
+}
+
+int main() {
+    head.next = NULL;
+    yyin = fopen("decl.txt", "r");
+    yylex();
+    display();
+
+    // Free allocated memory for nodes
+    node* current = head.next;
+    while (current != NULL) {
+        node* temp = current;
+        current = current->next;
+        free(temp);
+    }
+
+    return 0;
+}
+ decl.txt
+-----------------------------
+
+int c = 10;
+int int;
+char float;
+char letter;
+float asdf = 12.35;
+struct node {
+        int integer;
+        char b;
+        float c;
+};
+
+int intfun();
+char charfun();
+float floatfun();
+
+output:
+ID      Type    Lineno
+c       int     1
+int     int     2
+float   char    3
+letter  char    4
+asdf    float   5
+integer int     7
+b       char    8
+c       float   9
+intfun( function return int     12
+charfun(13      function return char
+floatfun(       function return floa    14
+
+
+--------------------------------------------------
+
+%option noyywrap
+%{
+#include <stdio.h>
+#include<string.h>
+struct SymbolEntry {
+    char name[64];
+    char type[16];
+};
+struct SymbolEntry table[26]={"" ,""};
+int count =0;
+void addSymbol(char* name, char* type) {
+        strcpy(table[count].name,name);
+        strcpy(table[count].type,type);
+        count++;
+}
+void display(){
+        printf("\nSymbol table\n");
+        printf("---------------------------------\n");
+        printf("Name\t\t|Type\t\n");
+        printf("---------------------\n");
+        for(int i=0;i<count;i++){
+                printf("%s\t\t|%s\t\n",table[i].name,table[i].type);
+        }
+        printf("---------------------------------\n");
+}
+%}
+KEYWORD    int|void|char|float|double|long
+%x character
+%x con
+%x integer
+%x float
+%x parameter
+%x header
+%x function
+%x structvar
+%%
+#include { BEGIN header;}
+<header>[a-zA-Z]+".h" { addSymbol(yytext,"header");BEGIN INITIAL;}
+{KEYWORD}[ ]+[a-zA-Z]+"("")" { addSymbol(yytext,"function");}
+{KEYWORD}[ ]*[a-zA-Z]+"("[a-zA-Z]+")" { addSymbol(yytext,"parameter");}
+main { addSymbol(yytext,"function");}
+int[ ]+ { BEGIN integer; }
+<integer>[a-zA-Z]+[ ]* { addSymbol(yytext,"int");BEGIN INITIAL;}
+struct[ ]+ { BEGIN structvar; }
+<structvar>[a-zA-Z]+[ ]* { addSymbol(yytext,"struct");BEGIN INITIAL;}
+float[ ]+ { BEGIN float; }
+<float>[a-zA-Z]+[ ]* { addSymbol(yytext,"float"); BEGIN INITIAL;}
+char[ ]+ { BEGIN character; }
+<character>[a-zA-Z][ ]* { addSymbol(yytext,"character");BEGIN INITIAL;}
+printf|scanf { addSymbol(yytext,"input/output"); BEGIN con;}
+<con>[ ][a-zA-Z] { addSymbol(yytext,"I/O content");BEGIN INITIAL;}
+int|float|char[ ]+[a-zA-Z]+"[]" { addSymbol(yytext,"array");}
+return { addSymbol(yytext,"complete"); return 0;}
+[a-zA-Z][a-zA-Z0-9]* { addSymbol(yytext, "identifier"); }
+[0-9]+ { addSymbol(yytext, "integer constant"); }
+[0-9]+\.[0-9]+ { addSymbol(yytext, "float constant"); }
+[ \t\n]
+.
+
+%%
+
+int main() {
+    yyin = fopen("input_text.c","r");
+    yylex();
+    display();
+    fclose(yyin);
+    return 0;
+}
+---------------------------
+input_text.c
+#include<stdio.h>
+int main(){
+        int n=0;
+        struct stu
+        {
+        while(int i=0;i<n;i++){
+                printf("hello");
+        }
+
+};
+
+        return 0;
+}
+
+output:
+Symbol table
+---------------------------------
+Name            |Type
+---------------------
+stdio.h         |header
+int main()              |function
+n               |int
+0               |integer constantstu
+stu             |struct
+while           |identifier
+i               |int
+0               |integer constanti
+i               |identifier
+n               |identifier
+i               |identifier
+printf          |input/output
+hello           |I/O content
+return          |complete
+---------------------------------
