@@ -1,0 +1,205 @@
+week4
+-------------------------------------------------------------
+Postfix:
+%option noyywrap
+%{
+        char stack[100];
+        int tos=0;
+        void push(char);
+        void pop();
+    char top();
+    int priority(char c);
+%}
+%%
+[a-zA-Z]? {printf("%c",yytext[0]);}
+[+\-\*\/\(\)] { char op=yytext[0];
+                 if(tos==0||op=='(')
+                   push(op);
+                 else if(op==')'){
+                   while(top()!='('){
+                    printf("%c",top());
+                    pop();
+                    }
+                    pop();
+                 }
+
+                 else if(priority(op)>=priority(top())){
+                  push(op);
+                  }
+                  else if(priority(op)<=priority(top())){
+                    while(priority(op)<=priority(top())){
+                       printf("%c",top());
+                       pop();
+                       }
+                       push(op);
+                  }
+              }
+ [\n]  {
+          int i;
+             for(i=tos-1;i>=0;i--)
+                 if(stack[i]!='('&&stack[i]!=')'){
+                    printf("%c",stack[i]);
+
+                    }
+          tos=0;
+
+
+       }
+
+%%
+int main(){
+   yylex();
+}
+
+void pop(){
+ tos--;
+}
+ char top(){
+   return stack[tos-1];
+}
+
+void push(char c){
+   stack[tos]=c;
+   tos++;
+}
+int priority(char c){
+switch(c){
+case '(':return 0;
+case ')':return 0;
+case '+':return 1;
+case '-':return 1;
+case '*':return 2;
+case '/':return 2;
+}
+}
+
+output: 
+a+b
+ab+
+---------------------------------------------------------------
+%option noyywrap
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int stack[100];
+char operator_stack[100];
+int top = -1;
+int operator_top = -1;
+
+int get_precedence(char operator) {
+    switch (operator) {
+        case '+':
+        case '-':
+            return 1;
+        case '*':
+        case '/':
+            return 2;
+        default:
+            return 0;
+    }
+}
+
+int eval_operator(int op1, int op2, char operator) {
+    switch (operator) {
+        case '+': return op1 + op2;
+        case '-': return op1 - op2;
+        case '*': return op1 * op2;
+        case '/': return op1 / op2;
+        default: return 0; // Handle other operators as needed
+    }
+}
+%}
+
+%%
+[0-9]+      { stack[++top] = atoi(yytext); }
+[-+*/]      {
+                while (operator_top >= 0 && get_precedence(operator_stack[operator_top]) >= get_precedence(yytext[0])) {
+                    int op2 = stack[top--];
+                    int op1 = stack[top--];
+                    stack[++top] = eval_operator(op1, op2, operator_stack[operator_top--]);
+                }
+                operator_stack[++operator_top] = yytext[0];
+            }
+\(          { operator_stack[++operator_top] = '('; }
+\)          {
+                while (operator_top >= 0 && operator_stack[operator_top] != '(') {
+                    int op2 = stack[top--];
+                    int op1 = stack[top--];
+                    stack[++top] = eval_operator(op1, op2, operator_stack[operator_top--]);
+                }
+                if (operator_top >= 0 && operator_stack[operator_top] == '(') {
+                    operator_top--;
+                } else {
+                    printf("Mismatched parentheses\n");
+                    exit(1);
+                }
+            }
+\n          {
+                while (operator_top >= 0) {
+                    int op2 = stack[top--];
+                    int op1 = stack[top--];
+                    stack[++top] = eval_operator(op1, op2, operator_stack[operator_top--]);
+                }
+                printf("Result: %d\n", stack[top]);
+                top = -1;
+            }
+[ \t]       ; // Ignore whitespace
+.           { printf("Invalid character: %s\n", yytext); }
+%%
+
+int main() {
+    yylex();
+    return 0;
+}
+
+output:
+6 9 +
+Result: 15
+
+
+------------------------------------------------------------
+%option noyywrap
+%{
+#include <stdio.h>
+%}
+
+DIGIT       [0-9]
+ID          [a-zA-Z][a-zA-Z0-9]*
+INTEGER     {DIGIT}+
+FLOAT       {DIGIT}+"."{DIGIT}+
+INVALID     [^a-zA-Z0-9\n\t ]
+KEYWORD     if|else|while|int|auto|break|case|char|const|continue|default|do|double|enum|extern|float|for|goto|long|register|return|short|signed|sizeof|static|struct|switch|typedef|union|unsigned|void|volatile|while
+%%
+{INTEGER}   { printf("INTEGER: %s\n", yytext); }
+{KEYWORD}   { printf("KEYWORD: %s\n", yytext); }
+{ID}        { printf("IDENTIFIER: %s\n", yytext); }
+{INVALID}   { printf("INVALID: %s\n", yytext); }
+{FLOAT}     { printf("FLOAT: %s\n", yytext); }
+\n          { /* Ignore newlines */ }
+.           { printf("ERROR: Unrecognized token: %s\n", yytext); }
+%%
+
+int main() {
+    yylex();
+    return 0;
+}
+output:
+
+jgjcsdsv90+45.5#%$^%^
+IDENTIFIER: jgjcsdsv90
+INVALID: +
+FLOAT: 45.5
+INVALID: #
+INVALID: %
+INVALID: $
+INVALID: ^
+INVALID: %
+INVALID: ^
+56+45 hello
+INTEGER: 56
+INVALID: +
+INTEGER: 45
+ERROR: Unrecognized token:
+IDENTIFIER: hello
