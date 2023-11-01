@@ -1,0 +1,207 @@
+week-5
+balanced_parenthesis
+
+%option noyywrap
+
+%{
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+
+void validate(char curr);
+char stack[1000] = {0};
+int stack_ind = 0;
+
+%}
+
+
+%%
+"("    {ECHO; stack[stack_ind++] = '(';}
+"{"    {ECHO; stack[stack_ind++] = '{';}
+"["    {ECHO; stack[stack_ind++] = '[';}
+")"    {ECHO; validate(yytext[0]);}
+"}"    {ECHO; validate(yytext[0]);}
+"]"    {ECHO; validate(yytext[0]);}
+<<EOF>> {if(stack_ind) printf("Error unmatched '(' or '[' or '{'\n");}
+.      {ECHO;}
+%%
+
+void validate(char curr){
+        if(!stack_ind){
+                printf("Error, unmatched %c\n", curr);
+                exit(1);
+        }
+
+        switch(curr){
+                case ')':
+                        if(stack[--stack_ind] == '(') return;
+                        break;
+                case '}':
+                        if(stack[--stack_ind] == '{') return;
+                        break;
+                case ']':
+                        if(stack[--stack_ind] == '[') return;
+                        break;
+        }
+
+        printf("\nUnmatched %c, found %c\n", curr, stack[stack_ind]);
+        exit(1);
+}
+
+
+int main(int argc, char* argv[]){
+
+        yyin = fopen(argv[1], "r");
+        yylex();
+        fclose(yyin);
+
+        return 0;
+}
+_______________
+
+text file mandatory:-  input.txt
+#include <stdlib.h>
+#include <string.h>
+
+
+int main(){
+
+        x = (a + b);
+        int arr[(3;
+
+        return 0;
+}
+-------------------------------
+output:
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+
+int main(){
+
+        x = (a + b);
+        int arr[(3;
+
+        return 0;
+}
+Unmatched }, found (
+-------------------------------------------------------------------------------------
+2.arithmetic-operators-to-boolean-operator.l
+_________________
+
+%option noyywrap
+
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+
+%}
+
+operand   [a-z_][a-z0-9_]*
+plus      "+"
+minus     "-"
+product   "*"
+divide    "/"
+
+%%
+{plus}      {printf("||");}
+{minus}     {printf("|| !");}
+{product}       {printf(" && ");}
+{divide}    {printf(" || !");}
+.           {ECHO;}
+%%
+
+
+int main(int argc, char* argv[]){
+        yyin = fopen(argv[1], "r");
+        yylex();
+
+        return 0;
+}
+
+______text file: input .txt  
+ (a + b) - c * d / e
+output : ./a.out input.txt
+(a || b) || ! c  &&  d  || ! e
+-----------------------------------------------------------------------------------------------------------------------------
+3.error detection
+%option noyywrap
+
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <string.h>
+
+
+%}
+
+%x SINGLELINECOMMENT
+%x MULTILINECOMMENT
+
+%%
+"//"                                     {ECHO; BEGIN SINGLELINECOMMENT;}
+<SINGLELINECOMMENT>\n    {ECHO; BEGIN INITIAL;}
+"/*"                     {ECHO; BEGIN MULTILINECOMMENT;}
+<MULTILINECOMMENT>"*/"   {ECHO; BEGIN INITIAL;}
+("shrot"|"shotr"|"shirt")  {printf("short");}
+("itn"|"nti"|"nit"|"tin")        {printf("int");}
+("chr"|"hcar"|"cahr")      {printf("char");}
+("flota"|"flaot"|"flat")  {printf("float");}
+(.|\t|\n)                {ECHO;}
+%%
+
+
+int main(int argc, char* argv[]){
+
+
+        yyin = fopen(argv[1], "r");
+        yylex();
+
+
+        return 0;
+
+}
+input .txt:
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+//hello wolrd
+
+int main(){
+
+        int a = 10;
+        nit b = 20;
+        chr c = 'c';
+        float d = 203.33;
+        flota e = 23.3;
+        shrot tin f = 84;
+
+
+        return 0;
+}
+output  : ./a.out input.txt
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+//hello wolrd
+
+int main(){
+
+        int a = 10;
+        int b = 20;
+        char c = 'c';
+        float d = 203.33;
+        float e = 23.3;
+        short int f = 84;
+
+
+        return 0;
+}
