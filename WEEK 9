@@ -1,0 +1,238 @@
+WEEK - 9 
+
+1) VALIDATION OF LOOP
+
+pro.l
+%option noyywrap
+%{
+#include<stdio.h>
+#include<stdlib.h>
+#include "y.tab.h"
+%}
+alpha [A-Za-z]
+digit [0-9]
+%%
+[ \t\n]
+'[' {digit}+ ']'        return ARRAY;
+while   return WHILE;
+for     return FOR;
+if      return IF;
+else    return ELSE;
+{digit}+    return NUM;
+{alpha}({alpha}|{digit})*    return ID;
+"<="    return LE;
+">="    return GE;
+"=="    return EQ;
+"!="    return NE;
+"||"    return OR;
+"&&"    return AND;
+.    return yytext[0];
+%%
+
+pro.y
+%{
+#include <stdio.h>
+#include <stdlib.h>
+extern FILE *yyin;
+extern int yylex();
+%}
+%token ID NUM WHILE LE GE EQ NE OR AND FOR IF ELSE ARRAY
+%right '='
+%left AND OR
+%left '<' '>' LE GE EQ NE
+%left '+''-'
+%left '*''/'
+%right UMINUS
+%left '!'
+%%
+prog    : S prog
+                                |
+S       : ST1 {printf("Input accepted.\n");};
+                        ST1     :  ARRAY ';'
+        | WHILE'(' E2 ')' '{' ST '}'
+        | WHILE '(' E2 ')' '{' FOR '(' E ';' E2 ';' E ')' '{' ST '}' '}'
+        | FOR '(' E ';' E2 ';' E ')' '{' ST '}'
+        | IF '(' E ')' '{' ST '}'
+        | ELSE '{' ST '}'
+ST      :     ST ST
+                                  | E';'
+          ;
+E       : ID'='E
+                                  | E'+'E
+          | E'-'E
+          | E'*'E
+          | E'/'E
+          | E'<'E
+          | E'>'E
+          | E LE E
+          | E GE E
+          | E EQ E
+          | E NE E
+          | E OR E
+          | E AND E
+          | ID
+          | NUM
+          ;
+E2      : E'<'E
+                                | E '>'E
+        | E LE E
+        | E GE E
+        | E EQ E
+        | E NE E
+        | E OR E
+        | E AND E
+        | ID
+        | NUM
+        ;
+
+%%
+void yyerror(char *s){
+        printf("%s\n",s);
+}
+
+int main(){
+        yyin = fopen("samp.c","r");
+        yyparse();
+}
+
+INPUT:
+
+samp.c
+for (i=0 ; i<n ; i=i+1){
+        a = 1;
+}
+while(i<10){
+        for (i=0; i<n;i=i+1){
+        i=a+1;
+}
+}
+
+if(i=0){
+        b=2;
+}
+else {
+        c=3;
+}
+
+for(i=0 ; i&&1 ; i=i+1){
+        b=2;
+}
+
+
+while(a!=10){
+        a=a+1;
+        b=b+2;
+}
+
+OUTPUT:
+Input accepted.
+Input accepted.
+Input accepted.
+Input accepted.
+Input accepted.
+Input accepted.
+
+------------------------------------------------------------------------------------------------------------------------------------------
+2) Validation of 5 different datatypes
+
+spot.l
+%option noyywrap
+%{
+#include<stdio.h>
+#include<stdlib.h>
+#include "y.tab.h"
+%}
+alpha [A-Za-z]
+digit [0-9]
+%%
+[ \t\n]
+#include<stdio.h> return INCLUDE;
+"struct "{alpha}({alpha}|{digit})* return STRUCT;
+"int"|"char"|"float" return DATATYPE;
+"int "{alpha}({alpha}|{digit})*"["{digit}+"]" return ARRAY;
+"float "{alpha}({alpha}|{digit})*"["{digit}+"]" return ARRAY;
+"char "{alpha}({alpha}|{digit})*"["{digit}+"]" return ARRAY;
+"typedef " return TYPEDEF;
+while   return WHILE;
+for     return FOR;
+{digit}+    return NUM;
+{alpha}({alpha}|{digit})*    return ID;
+"<="    return LE;
+">="    return GE;
+"=="    return EQ;
+"!="    return NE;
+"||"    return OR;
+"&&"    return AND;
+.    return yytext[0];
+%%
+
+spot.y
+%{
+#include <stdio.h>
+#include <stdlib.h>
+extern FILE *yyin;
+extern int yylex();
+%}
+%token ID NUM WHILE LE GE EQ NE OR AND FOR INCLUDE DATATYPE ARRAY STRUCT TYPEDEF
+%right '='
+%left AND OR
+%left '<' '>' LE GE EQ NE
+%left '+''-'
+%left '*''/'
+%right UMINUS
+%left '!'
+%%
+prog    : S prog
+                        |
+S       : ST1 {printf("Input accepted.\n");};
+                ST1     : DATATYPE E';'
+        | ARRAY';'
+        | STRUCT'{' ST1 ST1 ST1'}'';'
+        | TYPEDEF STRUCT';'
+        ;
+E       : ID'='E
+                          | E'+'E
+          | E'-'E
+          | E'*'E
+          | E'/'E
+          | ID
+          | NUM
+          ;
+
+%%
+
+void yyerror(char *s){
+        printf("%s\n",s);
+}
+
+int main(){
+   yyin = fopen("sample1.c","r");
+   yyparse();
+}
+
+INPUT:
+
+sample1.c
+int a=1;
+float b=1;
+int a[1];
+float b[1];
+char num[12];
+typedef struct beta;
+struct alpha{
+        int a=1;
+        int b[12];
+        float c=1;
+};
+
+OUTPUT:
+
+Input accepted.
+Input accepted.
+Input accepted.
+Input accepted.
+Input accepted.
+Input accepted.
+Input accepted.
+
+------------------------------------------------------------------------------------------------------------------------------------------
