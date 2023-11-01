@@ -1,0 +1,141 @@
+WEEK -8
+
+allfix.l
+
+%{
+#include<stdlib.h>
+#include<stdio.h>
+#include "y.tab.h"
+void yyerror(char* s);
+%}
+%%
+[0-9]+  { yylval = atoi(yytext); return INTEGER;}
+[-+*/\n()]  return *yytext;
+[ \t]   ;
+.        yyerror("INVALID SYNTEX");
+%%
+int yywrap(void){
+return 1;
+}
+
+1) INFIX(ADD ALLFIX CODE)
+
+cat infix.y
+
+%{
+#include<stdlib.h>
+#include<stdio.h>
+int yylex(void);
+void yyerror(char* s);
+%}
+%token INTEGER
+%%
+program:
+                            program expr '\n'   { printf("%d\n",$2);}
+|
+;
+expr:
+                expr '+' mulex { $$ = $1+$3; }
+|expr '-' mulex { $$ = $1-$3; }
+|mulex         { $$ = $1;}
+;
+mulex:
+                    mulex '*' term { $$ = $1*$3; }
+|mulex '/' term { if($3 !=0){$$ = $1/$3;} else{ printf("INVALID SYNTEX");exit(1); } }
+|term        { $$ = $1;}
+;
+term:
+                '('expr')'   { $$ = $2; };
+|INTEGER  { $$ = $1; }
+;
+%%
+void yyerror(char* s){
+fprintf(stderr,"Error:%s\n",s);
+return ;
+}
+int main(){
+yyparse();
+return 0;
+}
+
+INPUT & OUTPUT
+
+2+3-6
+-1
+
+------------------------------------------------------------------------------------------------------------------------------------------
+2) POSTFIX ( ADD ALLFIX CODE)
+
+ postfix.y
+%{
+#include <stdio.h>
+#include <stdlib.h>
+int result;
+int yylex(void);
+void yyerror(char *s);
+%}
+%token INTEGER
+/* Declare a global variable to store the result */
+%%
+expr:   INTEGER            { $$ = $1; }
+            | expr expr '+'      { $$ = $1 + $2; }
+    | expr expr '-'      { $$ = $1 - $2; }
+    | expr expr '*'      { $$ = $1 * $2; }
+    | expr expr '/'      { $$ = $1 / $2; }
+    | expr '\n'      { printf("%d\n", $1);}
+    ;
+%%
+int main() {
+    yyparse();
+    return 0;
+}
+void yyerror(char *msg) {
+    fprintf(stderr, "Error: %s\n", msg);
+    exit(1);
+}
+
+INPUT & OUTPUT:
+
+2 3 - 9 +
+8
+
+------------------------------------------------------------------------------------------------------------------------------------------
+
+3) PREFIX (ADD ALLFIX CODE)
+
+ prefix.y
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+int yylex(void);
+void yyerror(const char* s);
+%}
+%token INTEGER
+%%
+program:
+                  |
+    program expr '\n' { printf("%d\n", $2); }
+    ;
+expr:
+            INTEGER { $$ = $1; }
+    | '+' expr expr { $$ = $2 + $3; }
+    | '-' expr expr { $$ = $2 - $3; }
+    | '*' expr expr { $$ = $2 * $3; }
+    | '/' expr expr { $$ = $2 / $3; }
+    ;
+%%
+void yyerror(const char* s) {
+    fprintf(stderr, "Error: %s\n", s);
+}
+int main() {
+    yyparse();
+    return 0;
+}
+
+INPUT & OUTPUT
+
++ 2 3
+5
+
+------------------------------------------------------------------------------------------------------------------------------------------
